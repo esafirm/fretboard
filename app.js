@@ -217,8 +217,8 @@ function drawFretboard(voicing, tuning) {
 
   // Find the display window
   const activeFrets = voicing.frets.filter(f => f > 0);
-  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 0;
-  const startFret = minFret > 1 ? minFret - 1 : 0;
+  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 1;
+  const startFret = minFret > 1 ? minFret - 1 : 1;
 
   // Background
   ctx.fillStyle = '#1a1410';
@@ -385,8 +385,8 @@ function drawMiniDiagram(canvas, voicing, isActive) {
   const sh = (H - padT - padB) / (STRINGS-1);
 
   const activeFrets = voicing.frets.filter(f => f > 0);
-  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 0;
-  const startFret = minFret > 1 ? minFret - 1 : 0;
+  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 1;
+  const startFret = minFret > 1 ? minFret - 1 : 1;
 
   // bg
   ctx.fillStyle = '#161410';
