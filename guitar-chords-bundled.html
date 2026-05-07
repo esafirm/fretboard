@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fretboard — Guitar Chord Library</title>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>/* ── Variables ──────────────────────────────────── */
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #1a1a1a;
+  --bg4: #222222;
+  --border: #2a2a2a;
+  --border2: #333333;
+  --text: #e8e8e8;
+  --text2: #999999;
+  --text3: #555555;
+  --accent: #e8a020;
+  --accent2: #c07808;
+  --accent-glow: rgba(232, 160, 32, 0.25);
+  --green: #4ade80;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --string-e6: #f8f8f0;
+  --string-a: #e8e0c8;
+  --string-d: #d8d0b8;
+  --string-g: #c8c0a8;
+  --string-b: #b8b098;
+  --string-e1: #a8a088;
+  --fret-color: #3a3020;
+  --nut-color: #c8b870;
+  --dot-fill: #e8a020;
+  --dot-stroke: #c07808;
+  --dot-muted: #cc3333;
+  --dot-open: #e8e8e8;
+  --radius: 6px;
+  --radius2: 10px;
+  --sidebar-w: 220px;
+  --header-h: 56px;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+/* ── Reset ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
+
+/* ── Header ─────────────────────────────────────── */
+.site-header {
+  height: var(--header-h);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  font-size: 28px;
+  color: var(--accent);
+  line-height: 1;
+  margin-top: -2px;
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.btn-icon:hover { color: var(--text); border-color: var(--border2); background: var(--bg4); }
+.offline-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  transition: all 0.3s;
+}
+.offline-badge.online { color: var(--green); border-color: rgba(74, 222, 128, 0.2); }
+.offline-badge.offline { color: var(--accent); border-color: var(--accent-glow); }
+.offline-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.offline-badge.online .dot { animation: pulse-green 2s infinite; }
+@keyframes pulse-green { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ── Layout ─────────────────────────────────────── */
+.main-layout {
+  display: flex;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: calc(100vh - var(--header-h));
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+  background: var(--bg2);
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.sidebar-section { padding: 0 16px 20px; }
+.section-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* Note grid */
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.note-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+}
+.note-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+.note-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Type list */
+.type-list { display: flex; flex-direction: column; gap: 2px; }
+.type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 13px;
+  color: var(--text2);
+  transition: all 0.12s;
+  text-align: left;
+  width: 100%;
+}
+.type-btn:hover { background: var(--bg3); color: var(--text); }
+.type-btn.active {
+  background: rgba(232, 160, 32, 0.12);
+  color: var(--accent);
+  border-color: rgba(232, 160, 32, 0.25);
+}
+.type-symbol {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.type-btn.active .type-symbol { color: var(--accent2); }
+
+/* Voicing */
+.voicing-selector { display: flex; flex-direction: column; gap: 3px; }
+.voicing-btn {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+  transition: all 0.12s;
+  text-align: left;
+}
+.voicing-btn:hover { color: var(--text); border-color: var(--border2); }
+.voicing-btn.active {
+  background: var(--bg4);
+  color: var(--text);
+  border-color: var(--border2);
+}
+
+/* ── Main Content ─────────────────────────────────── */
+.main-content {
+  flex: 1;
+  padding: 28px 28px 60px;
+  min-width: 0;
+}
+
+/* Chord header */
+.chord-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.chord-name {
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 0.9;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.chord-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+}
+.meta-value {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+}
+.play-btn {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  flex-shrink: 0;
+  margin-top: 8px;
+  transition: all 0.15s;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.play-btn:hover { background: #f0b030; transform: scale(1.06); }
+.play-btn:active { transform: scale(0.96); }
+
+/* Fretboard */
+.fretboard-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+}
+.fretboard-container { overflow-x: auto; }
+canvas#fretboard { display: block; }
+
+/* Position row */
+.position-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 0 2px;
+}
+.position-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+}
+.position-dots { display: flex; gap: 6px; }
+.pos-dot {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.pos-dot:hover { color: var(--text2); border-color: var(--border2); }
+.pos-dot.active {
+  background: var(--bg4);
+  color: var(--text);
+  border-color: var(--border2);
+}
+
+/* Diagram section */
+.diagram-section { margin-bottom: 32px; }
+.diagram-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.chord-diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 12px 8px 8px;
+}
+.chord-diagram:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.chord-diagram.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 24px var(--accent-glow);
+}
+.diagram-canvas-wrap { width: 100%; }
+.diagram-label {
+  text-align: center;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  margin-top: 6px;
+}
+
+/* Notes reference */
+.notes-reference {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.note-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+}
+.note-pill.root {
+  background: rgba(232, 160, 32, 0.15);
+  border-color: rgba(232, 160, 32, 0.4);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Tuning Panel ─────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.tuning-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+.tuning-panel.show { transform: translateX(0); }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+.btn-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  font-size: 12px;
+  color: var(--text3);
+  transition: all 0.12s;
+}
+.btn-close:hover { color: var(--text); background: var(--bg4); }
+.tuning-options { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.tuning-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tuning-option:hover { border-color: var(--border2); background: var(--bg4); }
+.tuning-option.active { border-color: var(--accent); background: rgba(232,160,32,0.08); }
+.tuning-name { font-size: 13px; font-weight: 500; }
+.tuning-notes { font-size: 11px; font-family: var(--font-mono); color: var(--text3); }
+.tuning-option.active .tuning-notes { color: var(--accent2); }
+
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .sidebar-section:last-child { display: none; }
+  .chord-name { font-size: 52px; }
+  .diagram-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .main-content { padding: 20px 16px 40px; }
+  canvas#fretboard { width: 800px; }
+}
+
+/* ── Loading / transitions ────────────────────────── */
+.fade-in { animation: fadeIn 0.2s ease-out; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: none; } }
+</style>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">𝄞</span>
+          <span class="logo-text">Fretboard</span>
+        </div>
+        <div class="header-controls">
+          <button class="btn-icon" id="toggleTuning" title="Tuning">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          </button>
+          <div class="offline-badge" id="offlineBadge">
+            <span class="dot"></span><span>Offline</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main layout -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="section-label">Root Note</div>
+          <div class="note-grid" id="noteGrid"></div>
+        </div>
+        <div class="sidebar-section">
+          <div class="section-label">Chord Type</div>
+          <div class="type-list" id="typeList"></div>
+        </div>
+        <div class="sidebar-section">
+          <div class="section-label">Voicing</div>
+          <div class="voicing-selector" id="voicingSelector"></div>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="main-content">
+        <!-- Chord header -->
+        <div class="chord-header">
+          <div class="chord-title-group">
+            <h1 class="chord-name" id="chordName">D7</h1>
+            <div class="chord-meta" id="chordMeta">
+              <span class="meta-item"><span class="meta-label">Name</span><span class="meta-value" id="chordFullName">Dominant seventh</span></span>
+              <span class="meta-item"><span class="meta-label">Symbol</span><span class="meta-value" id="chordSymbol">7</span></span>
+              <span class="meta-item"><span class="meta-label">Formula</span><span class="meta-value" id="chordFormula">1–3–5–♭7</span></span>
+              <span class="meta-item"><span class="meta-label">Notes</span><span class="meta-value" id="chordNotes">D F♯ A C</span></span>
+            </div>
+          </div>
+          <button class="play-btn" id="playBtn" title="Play chord">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+
+        <!-- Fretboard diagram -->
+        <div class="fretboard-wrap">
+          <div class="fretboard-container">
+            <canvas id="fretboard" width="900" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Position selector -->
+        <div class="position-row">
+          <span class="position-label">Position</span>
+          <div class="position-dots" id="positionDots"></div>
+        </div>
+
+        <!-- Chord diagram grid -->
+        <div class="diagram-section">
+          <div class="diagram-grid" id="diagramGrid"></div>
+        </div>
+
+        <!-- Scale notes reference -->
+        <div class="notes-reference" id="notesReference"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Tuning panel -->
+  <div class="tuning-panel" id="tuningPanel">
+    <div class="panel-header">
+      <span>Tuning</span>
+      <button class="btn-close" id="closeTuning">✕</button>
+    </div>
+    <div class="tuning-options" id="tuningOptions"></div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <script>// ── Chord Database ────────────────────────────────────────────────────────────
+// Format: [string6(low-E), string5(A), string4(D), string3(G), string2(B), string1(high-E)]
+// -1 = muted (X), 0 = open, 1-22 = fret number
+// barre: { fret, from, to } — optional barre indicator
+// fingers: [6,5,4,3,2,1] — 0=open/muted, 1-4=finger number
+
+const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_ALT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+const CHORD_TYPES = [
+  { id: 'major',   name: 'Major',         symbol: '',      formula: '1–3–5',         intervals: [0,4,7] },
+  { id: 'minor',   name: 'Minor',         symbol: 'm',     formula: '1–♭3–5',        intervals: [0,3,7] },
+  { id: '7',       name: 'Dom. 7th',      symbol: '7',     formula: '1–3–5–♭7',      intervals: [0,4,7,10] },
+  { id: 'maj7',    name: 'Major 7th',     symbol: 'maj7',  formula: '1–3–5–7',       intervals: [0,4,7,11] },
+  { id: 'm7',      name: 'Minor 7th',     symbol: 'm7',    formula: '1–♭3–5–♭7',     intervals: [0,3,7,10] },
+  { id: 'dim',     name: 'Diminished',    symbol: '°',     formula: '1–♭3–♭5',       intervals: [0,3,6] },
+  { id: 'dim7',    name: 'Dim. 7th',      symbol: '°7',    formula: '1–♭3–♭5–♭♭7',  intervals: [0,3,6,9] },
+  { id: 'aug',     name: 'Augmented',     symbol: '+',     formula: '1–3–♯5',        intervals: [0,4,8] },
+  { id: 'sus2',    name: 'Sus 2',         symbol: 'sus2',  formula: '1–2–5',         intervals: [0,2,7] },
+  { id: 'sus4',    name: 'Sus 4',         symbol: 'sus4',  formula: '1–4–5',         intervals: [0,5,7] },
+  { id: '5',       name: 'Power',         symbol: '5',     formula: '1–5',           intervals: [0,7] },
+  { id: 'm7b5',    name: 'Half-Dim.',     symbol: 'ø7',    formula: '1–♭3–♭5–♭7',   intervals: [0,3,6,10] },
+  { id: '9',       name: 'Dom. 9th',      symbol: '9',     formula: '1–3–5–♭7–9',   intervals: [0,4,7,10,14] },
+  { id: 'maj9',    name: 'Major 9th',     symbol: 'maj9',  formula: '1–3–5–7–9',    intervals: [0,4,7,11,14] },
+  { id: 'm9',      name: 'Minor 9th',     symbol: 'm9',    formula: '1–♭3–5–♭7–9',  intervals: [0,3,7,10,14] },
+  { id: '6',       name: 'Major 6th',     symbol: '6',     formula: '1–3–5–6',       intervals: [0,4,7,9] },
+  { id: 'm6',      name: 'Minor 6th',     symbol: 'm6',    formula: '1–♭3–5–6',      intervals: [0,3,7,9] },
+  { id: 'add9',    name: 'Add 9',         symbol: 'add9',  formula: '1–3–5–9',       intervals: [0,4,7,14] },
+  { id: '7sus4',   name: '7 Sus 4',       symbol: '7sus4', formula: '1–4–5–♭7',      intervals: [0,5,7,10] },
+  { id: '13',      name: 'Dom. 13th',     symbol: '13',    formula: '1–3–♭7–13',     intervals: [0,4,10,21] },
+];
+
+// ── Standard tuning: string pitches (semitones, MIDI-relative)
+// E2=40, A2=45, D3=50, G3=55, B3=59, E4=64
+const TUNINGS = {
+  standard: { name: 'Standard', notes: ['E2','A2','D3','G3','B3','E4'], pitches: [40,45,50,55,59,64] },
+  dropD:    { name: 'Drop D',   notes: ['D2','A2','D3','G3','B3','E4'], pitches: [38,45,50,55,59,64] },
+  openG:    { name: 'Open G',   notes: ['D2','G2','D3','G3','B3','D4'], pitches: [38,43,50,55,59,62] },
+  openE:    { name: 'Open E',   notes: ['E2','B2','E3','G#3','B3','E4'], pitches: [40,47,52,56,59,64] },
+  dadgad:   { name: 'DADGAD',   notes: ['D2','A2','D3','G3','A3','D4'], pitches: [38,45,50,55,57,62] },
+  halfDown: { name: '½ Step Down', notes: ['Eb2','Ab2','Db3','Gb3','Bb3','Eb4'], pitches: [39,44,49,54,58,63] },
+};
+
+// ── Chord voicings database ────────────────────────────────────────────────────
+// Organized as: CHORD_VOICINGS[rootIndex][typeId] = [ voicing1, voicing2, ... ]
+// Each voicing: { frets: [6,5,4,3,2,1], fingers: [6,5,4,3,2,1], barre?, capo? }
+
+const CHORD_VOICINGS = {};
+
+// Helper to build voicings for all 12 roots
+function buildVoicings() {
+  // Seed voicings for "open" positions (C, A, G, E, D shapes)
+  // We'll define shapes and transpose them
+
+  const rawVoicings = {
+    // ── C ────────────────────────────────────────────────────────────────
+    'C-major': [
+      { frets:[-1,3,2,0,1,0], fingers:[0,3,2,0,1,0] },
+      { frets:[8,10,10,9,8,8], fingers:[1,3,4,3,1,1], barre:{fret:8,from:0,to:5} },
+      { frets:[0,3,2,0,1,3], fingers:[0,3,2,0,1,4] },
+    ],
+    'C-minor': [
+      { frets:[-1,3,5,5,4,3], fingers:[0,1,3,4,2,1], barre:{fret:3,from:0,to:5} },
+      { frets:[8,10,10,9,8,8], fingers:[1,3,4,3,1,1], barre:{fret:8,from:0,to:5} },
+      { frets:[-1,3,5,5,4,3], fingers:[0,1,3,4,2,1], barre:{fret:3,from:1,to:5} },
+    ],
+    'C-7': [
+      { frets:[-1,3,2,3,1,0], fingers:[0,3,2,4,1,0] },
+      { frets:[8,10,8,9,8,8], fingers:[1,3,1,2,1,1], barre:{fret:8,from:0,to:5} },
+    ],
+    'C-maj7': [
+      { frets:[-1,3,2,0,0,0], fingers:[0,3,2,0,0,0] },
+      { frets:[8,10,9,9,8,8], fingers:[1,4,2,3,1,1], barre:{fret:8,from:0,to:5} },
+    ],
+    'C-m7': [
+      { frets:[-1,3,5,3,4,3], fingers:[0,1,3,1,2,1], barre:{fret:3,from:0,to:5} },
+    ],
+    'C-sus2': [
+      { frets:[-1,3,0,0,1,3], fingers:[0,2,0,0,1,3] },
+      { frets:[8,10,10,10,8,8], fingers:[1,3,3,3,1,1], barre:{fret:8,from:0,to:5} },
+    ],
+    'C-sus4': [
+      { frets:[-1,3,3,0,1,1], fingers:[0,3,4,0,1,2] },
+    ],
+    'C-dim': [
+      { frets:[-1,3,4,5,4,3], fingers:[0,1,2,4,3,1] },
+    ],
+    'C-dim7': [
+      { frets:[-1,3,4,2,4,3], fingers:[0,2,3,1,4,2] },
+    ],
+    'C-aug': [
+      { frets:[-1,3,2,1,1,0], fingers:[0,4,3,1,2,0] },
+    ],
+    'C-5': [
+      { frets:[8,10,10,-1,-1,-1], fingers:[1,3,4,0,0,0] },
+      { frets:[-1,3,5,-1,-1,-1], fingers:[0,1,3,0,0,0] },
+    ],
+    'C-m7b5': [
+      { frets:[-1,3,4,3,4,3], fingers:[0,1,2,1,3,1], barre:{fret:3,from:0,to:5} },
+    ],
+    'C-9': [
+      { frets:[-1,3,2,3,3,3], fingers:[0,2,1,3,3,3] },
+    ],
+    'C-maj9': [
+      { frets:[-1,3,0,0,0,0], fingers:[0,2,0,0,0,0] },
+    ],
+    'C-add9': [
+      { frets:[-1,3,2,0,3,0], fingers:[0,2,1,0,3,0] },
+    ],
+    'C-6': [
+      { frets:[-1,3,2,2,1,0], fingers:[0,3,2,2,1,0] },
+    ],
+    'm6-C': [
+      { frets:[-1,3,5,5,4,5], fingers:[0,1,3,4,2,4] },
+    ],
+    'C-7sus4': [
+      { frets:[-1,3,3,3,1,1], fingers:[0,3,4,3,1,2] },
+    ],
+
+    // ── A ─────────────────────────────────────────────────────────────────
+    'A-major': [
+      { frets:[-1,0,2,2,2,0], fingers:[0,0,1,2,3,0] },
+      { frets:[5,7,7,6,5,5], fingers:[1,3,4,2,1,1], barre:{fret:5,from:0,to:5} },
+      { frets:[-1,0,2,2,2,5], fingers:[0,0,1,1,1,4] },
+    ],
+    'A-minor': [
+      { frets:[-1,0,2,2,1,0], fingers:[0,0,2,3,1,0] },
+      { frets:[5,7,7,5,5,5], fingers:[1,3,4,1,1,1], barre:{fret:5,from:0,to:5} },
+    ],
+    'A-7': [
+      { frets:[-1,0,2,0,2,0], fingers:[0,0,2,0,3,0] },
+      { frets:[5,7,5,6,5,5], fingers:[1,3,1,2,1,1], barre:{fret:5,from:0,to:5} },
+    ],
+    'A-maj7': [
+      { frets:[-1,0,2,1,2,0], fingers:[0,0,3,1,2,0] },
+    ],
+    'A-m7': [
+      { frets:[-1,0,2,0,1,0], fingers:[0,0,2,0,1,0] },
+      { frets:[5,7,5,5,5,5], fingers:[1,3,1,1,1,1], barre:{fret:5,from:0,to:5} },
+    ],
+    'A-sus2': [
+      { frets:[-1,0,2,2,0,0], fingers:[0,0,1,2,0,0] },
+    ],
+    'A-sus4': [
+      { frets:[-1,0,2,2,3,0], fingers:[0,0,1,2,3,0] },
+    ],
+    'A-dim': [
+      { frets:[-1,0,1,2,1,0], fingers:[0,0,1,3,2,0] },
+    ],
+    'A-dim7': [
+      { frets:[-1,0,1,2,1,2], fingers:[0,0,1,3,2,4] },
+    ],
+    'A-aug': [
+      { frets:[-1,0,3,2,2,1], fingers:[0,0,4,2,3,1] },
+    ],
+    'A-5': [
+      { frets:[-1,0,2,-1,-1,-1], fingers:[0,0,1,0,0,0] },
+      { frets:[5,7,7,-1,-1,-1], fingers:[1,3,4,0,0,0] },
+    ],
+    'A-9': [
+      { frets:[-1,0,2,0,2,2], fingers:[0,0,1,0,2,3] },
+    ],
+    'A-maj9': [
+      { frets:[-1,0,2,1,0,0], fingers:[0,0,3,1,0,0] },
+    ],
+    'A-add9': [
+      { frets:[-1,0,2,2,0,2], fingers:[0,0,1,2,0,3] },
+    ],
+    'A-6': [
+      { frets:[-1,0,2,2,2,2], fingers:[0,0,1,2,3,4] },
+    ],
+    'A-m6': [
+      { frets:[-1,0,2,2,1,2], fingers:[0,0,2,3,1,4] },
+    ],
+    'A-m7b5': [
+      { frets:[-1,0,1,2,1,3], fingers:[0,0,1,2,1,4] },
+    ],
+    'A-7sus4': [
+      { frets:[-1,0,2,0,3,0], fingers:[0,0,1,0,2,0] },
+    ],
+
+    // ── G ─────────────────────────────────────────────────────────────────
+    'G-major': [
+      { frets:[3,2,0,0,0,3], fingers:[2,1,0,0,0,3] },
+      { frets:[3,2,0,0,3,3], fingers:[2,1,0,0,3,4] },
+      { frets:[3,5,5,4,3,3], fingers:[1,3,4,2,1,1], barre:{fret:3,from:0,to:5} },
+    ],
+    'G-minor': [
+      { frets:[3,5,5,3,3,3], fingers:[1,3,4,1,1,1], barre:{fret:3,from:0,to:5} },
+      { frets:[-1,-1,5,3,3,3], fingers:[0,0,4,1,1,1], barre:{fret:3,from:2,to:5} },
+    ],
+    'G-7': [
+      { frets:[3,2,0,0,0,1], fingers:[3,2,0,0,0,1] },
+      { frets:[3,5,3,4,3,3], fingers:[1,3,1,2,1,1], barre:{fret:3,from:0,to:5} },
+    ],
+    'G-maj7': [
+      { frets:[3,2,0,0,0,2], fingers:[3,2,0,0,0,1] },
+    ],
+    'G-m7': [
+      { frets:[3,5,3,3,3,3], fingers:[1,3,1,1,1,1], barre:{fret:3,from:0,to:5} },
+    ],
+    'G-sus2': [
+      { frets:[3,0,0,0,3,3], fingers:[2,0,0,0,3,4] },
+    ],
+    'G-sus4': [
+      { frets:[3,3,0,0,1,3], fingers:[2,3,0,0,1,4] },
+    ],
+    'G-dim': [
+      { frets:[3,4,5,3,-1,-1], fingers:[1,2,3,1,0,0] },
+    ],
+    'G-aug': [
+      { frets:[3,2,1,0,0,-1], fingers:[4,3,1,0,0,0] },
+    ],
+    'G-5': [
+      { frets:[3,5,5,-1,-1,-1], fingers:[1,3,4,0,0,0] },
+    ],
+    'G-9': [
+      { frets:[3,0,0,0,0,1], fingers:[3,0,0,0,0,1] },
+    ],
+    'G-add9': [
+      { frets:[3,2,0,2,3,3], fingers:[2,1,0,1,3,4] },
+    ],
+    'G-6': [
+      { frets:[3,2,0,0,0,0], fingers:[3,2,0,0,0,0] },
+    ],
+    'G-m6': [
+      { frets:[3,5,5,3,4,3], fingers:[1,3,4,1,2,1] },
+    ],
+    'G-7sus4': [
+      { frets:[3,3,0,0,1,1], fingers:[2,3,0,0,1,1] },
+    ],
+
+    // ── E ─────────────────────────────────────────────────────────────────
+    'E-major': [
+      { frets:[0,2,2,1,0,0], fingers:[0,2,3,1,0,0] },
+      { frets:[0,2,2,1,0,0], fingers:[0,2,3,1,0,0] },
+      { frets:[12,14,14,13,12,12], fingers:[1,3,4,2,1,1], barre:{fret:12,from:0,to:5} },
+    ],
+    'E-minor': [
+      { frets:[0,2,2,0,0,0], fingers:[0,2,3,0,0,0] },
+      { frets:[12,14,14,12,12,12], fingers:[1,3,4,1,1,1], barre:{fret:12,from:0,to:5} },
+    ],
+    'E-7': [
+      { frets:[0,2,0,1,0,0], fingers:[0,2,0,1,0,0] },
+    ],
+    'E-maj7': [
+      { frets:[0,2,1,1,0,0], fingers:[0,3,1,2,0,0] },
+    ],
+    'E-m7': [
+      { frets:[0,2,2,0,3,0], fingers:[0,2,3,0,4,0] },
+      { frets:[0,2,0,0,0,0], fingers:[0,2,0,0,0,0] },
+    ],
+    'E-sus2': [
+      { frets:[0,2,2,4,0,0], fingers:[0,1,2,4,0,0] },
+    ],
+    'E-sus4': [
+      { frets:[0,2,2,2,0,0], fingers:[0,2,3,4,0,0] },
+    ],
+    'E-dim': [
+      { frets:[0,1,2,0,-1,-1], fingers:[0,1,2,0,0,0] },
+    ],
+    'E-aug': [
+      { frets:[0,3,2,1,1,0], fingers:[0,4,3,1,2,0] },
+    ],
+    'E-5': [
+      { frets:[0,2,2,-1,-1,-1], fingers:[0,1,2,0,0,0] },
+    ],
+    'E-9': [
+      { frets:[0,2,0,1,0,2], fingers:[0,2,0,1,0,3] },
+    ],
+    'E-add9': [
+      { frets:[0,2,2,1,0,2], fingers:[0,2,3,1,0,4] },
+    ],
+    'E-6': [
+      { frets:[0,2,2,1,2,0], fingers:[0,2,3,1,4,0] },
+    ],
+    'E-m6': [
+      { frets:[0,2,2,0,2,0], fingers:[0,2,3,0,4,0] },
+    ],
+    'E-7sus4': [
+      { frets:[0,2,2,2,0,0], fingers:[0,1,2,3,0,0] },
+    ],
+    'E-dim7': [
+      { frets:[0,1,2,0,2,0], fingers:[0,1,3,0,4,0] },
+    ],
+    'E-m7b5': [
+      { frets:[0,1,2,0,3,0], fingers:[0,1,2,0,4,0] },
+    ],
+
+    // ── D ─────────────────────────────────────────────────────────────────
+    'D-major': [
+      { frets:[-1,-1,0,2,3,2], fingers:[0,0,0,1,3,2] },
+      { frets:[10,12,12,11,10,10], fingers:[1,3,4,2,1,1], barre:{fret:10,from:0,to:5} },
+    ],
+    'D-minor': [
+      { frets:[-1,-1,0,2,3,1], fingers:[0,0,0,2,3,1] },
+      { frets:[10,12,12,10,10,10], fingers:[1,3,4,1,1,1], barre:{fret:10,from:0,to:5} },
+    ],
+    'D-7': [
+      { frets:[-1,-1,0,2,1,2], fingers:[0,0,0,2,1,3] },
+    ],
+    'D-maj7': [
+      { frets:[-1,-1,0,2,2,2], fingers:[0,0,0,1,2,3] },
+    ],
+    'D-m7': [
+      { frets:[-1,-1,0,2,1,1], fingers:[0,0,0,3,1,1], barre:{fret:1,from:3,to:5} },
+    ],
+    'D-sus2': [
+      { frets:[-1,-1,0,2,3,0], fingers:[0,0,0,1,2,0] },
+    ],
+    'D-sus4': [
+      { frets:[-1,-1,0,2,3,3], fingers:[0,0,0,1,3,4] },
+    ],
+    'D-dim': [
+      { frets:[-1,-1,0,1,3,1], fingers:[0,0,0,1,3,2] },
+    ],
+    'D-dim7': [
+      { frets:[-1,-1,0,1,0,1], fingers:[0,0,0,2,0,3] },
+    ],
+    'D-aug': [
+      { frets:[-1,-1,0,3,3,2], fingers:[0,0,0,3,4,2] },
+    ],
+    'D-5': [
+      { frets:[-1,-1,0,2,-1,-1], fingers:[0,0,0,1,0,0] },
+    ],
+    'D-9': [
+      { frets:[-1,0,0,2,1,2], fingers:[0,0,0,3,1,4] },
+    ],
+    'D-maj9': [
+      { frets:[-1,-1,0,2,2,4], fingers:[0,0,0,1,2,4] },
+    ],
+    'D-add9': [
+      { frets:[-1,0,0,2,3,2], fingers:[0,0,0,1,2,1] },
+    ],
+    'D-6': [
+      { frets:[-1,-1,0,2,0,2], fingers:[0,0,0,2,0,3] },
+    ],
+    'D-m6': [
+      { frets:[-1,-1,0,2,0,1], fingers:[0,0,0,3,0,1] },
+    ],
+    'D-m7b5': [
+      { frets:[-1,-1,0,1,3,1], fingers:[0,0,0,1,4,2] },
+    ],
+    'D-7sus4': [
+      { frets:[-1,-1,0,2,1,3], fingers:[0,0,0,2,1,3] },
+    ],
+    'm9-D': [
+      { frets:[-1,-1,0,2,1,0], fingers:[0,0,0,3,2,0] },
+    ],
+    'm6-D': [
+      { frets:[-1,-1,0,2,0,1], fingers:[0,0,0,3,0,1] },
+    ],
+    '13-D': [
+      { frets:[-1,-1,0,2,0,0], fingers:[0,0,0,1,0,0] },
+    ],
+  };
+
+  // Initialize all 12 root notes with all chord types
+  for (let r = 0; r < 12; r++) {
+    CHORD_VOICINGS[r] = {};
+    for (const type of CHORD_TYPES) {
+      CHORD_VOICINGS[r][type.id] = [];
+    }
+  }
+
+  // Place raw voicings and generate transpositions
+  const noteToIndex = { 'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,
+                         'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11 };
+
+  for (const [key, voicings] of Object.entries(rawVoicings)) {
+    // Parse key: "C-major" or "major-C" or "m9-D"
+    let root, typeId;
+    const parts = key.split('-');
+    if (parts.length === 2) {
+      if (noteToIndex[parts[0]] !== undefined) {
+        root = parts[0]; typeId = parts[1];
+      } else {
+        typeId = parts[0]; root = parts[1];
+      }
+    }
+    const rootIdx = noteToIndex[root];
+    if (rootIdx === undefined || !CHORD_VOICINGS[rootIdx]) continue;
+    const arr = CHORD_VOICINGS[rootIdx][typeId];
+    if (!arr) continue;
+    arr.push(...voicings);
+  }
+
+  // Generate barre transpositions from E-shape and A-shape
+  // E shape voicings → transpose up for all roots
+  const eShapes = {
+    'major': { frets:[0,2,2,1,0,0], fingers:[0,2,3,1,0,0] },
+    'minor': { frets:[0,2,2,0,0,0], fingers:[0,2,3,0,0,0] },
+    '7':     { frets:[0,2,0,1,0,0], fingers:[0,2,0,1,0,0] },
+    'maj7':  { frets:[0,2,1,1,0,0], fingers:[0,3,1,2,0,0] },
+    'm7':    { frets:[0,2,0,0,0,0], fingers:[0,2,0,0,0,0] },
+    'sus4':  { frets:[0,2,2,2,0,0], fingers:[0,2,3,4,0,0] },
+    'sus2':  { frets:[0,2,2,4,0,0], fingers:[0,1,2,4,0,0] },
+    'aug':   { frets:[0,3,2,1,1,0], fingers:[0,4,3,1,2,0] },
+    'dim':   { frets:[0,1,2,0,-1,-1], fingers:[0,1,2,0,0,0] },
+    '5':     { frets:[0,2,2,-1,-1,-1], fingers:[0,1,2,0,0,0] },
+    'm7b5':  { frets:[0,1,2,0,3,0], fingers:[0,1,2,0,4,0] },
+    '7sus4': { frets:[0,2,2,2,0,0], fingers:[0,1,2,3,0,0] },
+  };
+
+  // A shape voicings → transpose for all roots
+  const aShapes = {
+    'major': { frets:[-1,0,2,2,2,0], fingers:[0,0,1,2,3,0] },
+    'minor': { frets:[-1,0,2,2,1,0], fingers:[0,0,2,3,1,0] },
+    '7':     { frets:[-1,0,2,0,2,0], fingers:[0,0,2,0,3,0] },
+    'maj7':  { frets:[-1,0,2,1,2,0], fingers:[0,0,3,1,2,0] },
+    'm7':    { frets:[-1,0,2,0,1,0], fingers:[0,0,2,0,1,0] },
+    'sus4':  { frets:[-1,0,2,2,3,0], fingers:[0,0,1,2,3,0] },
+    'sus2':  { frets:[-1,0,2,2,0,0], fingers:[0,0,1,2,0,0] },
+    '5':     { frets:[-1,0,2,-1,-1,-1], fingers:[0,0,1,0,0,0] },
+    '7sus4': { frets:[-1,0,2,0,3,0], fingers:[0,0,1,0,2,0] },
+  };
+
+  const OPEN_PITCHES = [40,45,50,55,59,64]; // E A D G B E
+
+  function transposeVoicing(shape, semitones) {
+    const frets = shape.frets.map(f => f < 0 ? f : f + semitones);
+    const fingers = [...shape.fingers];
+    const result = { frets, fingers };
+    if (shape.barre) {
+      result.barre = { fret: shape.barre.fret + semitones, from: shape.barre.from, to: shape.barre.to };
+    }
+    return result;
+  }
+
+  // E shape root note is on string 6 (index 0), pitch 40 = E2
+  // A shape root note is on string 5 (index 1), pitch 45 = A2
+  for (const [typeId, shape] of Object.entries(eShapes)) {
+    for (let r = 0; r < 12; r++) {
+      const targetPitch = 40 + r; // E=0, F=1, F#=2...
+      // Lowest sensible fret
+      const semitones = ((targetPitch - 40) % 12 + 12) % 12;
+      if (semitones === 0) continue; // already have E-shape open
+      const v = transposeVoicing(shape, semitones);
+      if (!v.barre) {
+        v.barre = { fret: semitones, from: 0, to: 5 };
+      }
+      // Add fingers = 1 for barre on lowest fret, shift others
+      v.fingers = v.fingers.map(f => f > 0 ? Math.min(f+1,4) : f);
+      // String 0 and string 5: barre finger = 1
+      v.fingers[0] = 1; v.fingers[4] = 1; v.fingers[5] = 1;
+      if (!CHORD_VOICINGS[r][typeId]) continue;
+      // Avoid dupes
+      const existing = CHORD_VOICINGS[r][typeId];
+      const key2 = v.frets.join(',');
+      if (!existing.some(e => e.frets.join(',') === key2)) {
+        existing.push(v);
+      }
+    }
+  }
+
+  for (const [typeId, shape] of Object.entries(aShapes)) {
+    for (let r = 0; r < 12; r++) {
+      const targetPitch = 45 + r;
+      const semitones = ((targetPitch - 45) % 12 + 12) % 12;
+      if (semitones === 0) continue;
+      const v = transposeVoicing(shape, semitones);
+      if (!v.barre) {
+        v.barre = { fret: semitones, from: 1, to: 5 };
+      }
+      v.fingers = v.fingers.map(f => f > 0 ? Math.min(f+1,4) : f);
+      v.fingers[1] = 1; v.fingers[5] = 1;
+      if (!CHORD_VOICINGS[r][typeId]) continue;
+      const existing = CHORD_VOICINGS[r][typeId];
+      const key2 = v.frets.join(',');
+      if (!existing.some(e => e.frets.join(',') === key2)) {
+        existing.push(v);
+      }
+    }
+  }
+
+  // Fill any empty with generic fallback
+  for (let r = 0; r < 12; r++) {
+    for (const type of CHORD_TYPES) {
+      if (!CHORD_VOICINGS[r][type.id] || CHORD_VOICINGS[r][type.id].length === 0) {
+        // Generic barre
+        const semitones = r;
+        const baseFret = semitones === 0 ? 12 : semitones;
+        CHORD_VOICINGS[r][type.id] = [{
+          frets: [baseFret, baseFret+2, baseFret+2, baseFret+1, baseFret, baseFret],
+          fingers: [1,3,4,2,1,1],
+          barre: { fret: baseFret, from: 0, to: 5 }
+        }];
+      }
+    }
+  }
+}
+
+buildVoicings();
+
+// Export
+window.NOTES = NOTES;
+window.NOTE_ALT = NOTE_ALT;
+window.CHORD_TYPES = CHORD_TYPES;
+window.CHORD_VOICINGS = CHORD_VOICINGS;
+window.TUNINGS = TUNINGS;
+</script>
+  <script>// ── App State ─────────────────────────────────────────────────────────────────
+const state = {
+  rootIndex: 2,       // D
+  typeId: '7',
+  voicingIndex: 0,
+  tuning: 'standard',
+  position: 0,
+};
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+let audioCtx = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildNoteGrid();
+  buildTypeList();
+  buildTuningPanel();
+  updateUI();
+  checkOnline();
+  window.addEventListener('online', checkOnline);
+  window.addEventListener('offline', checkOnline);
+
+  $('playBtn').addEventListener('click', playChord);
+  $('toggleTuning').addEventListener('click', openTuning);
+  $('closeTuning').addEventListener('click', closeTuning);
+  $('overlay').addEventListener('click', closeTuning);
+
+  // keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ') { e.preventDefault(); playChord(); }
+  });
+});
+
+function checkOnline() {
+  const badge = $('offlineBadge');
+  if (navigator.onLine) {
+    badge.classList.add('online');
+    badge.classList.remove('offline');
+    badge.innerHTML = '<span class="dot"></span><span>Online</span>';
+  } else {
+    badge.classList.add('offline');
+    badge.classList.remove('online');
+    badge.innerHTML = '<span class="dot"></span><span>Offline</span>';
+  }
+}
+
+// ── Build sidebar ─────────────────────────────────────────────────────────────
+function buildNoteGrid() {
+  const grid = $('noteGrid');
+  grid.innerHTML = '';
+  NOTES.forEach((note, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'note-btn' + (i === state.rootIndex ? ' active' : '');
+    btn.textContent = note;
+    btn.dataset.index = i;
+    btn.addEventListener('click', () => {
+      state.rootIndex = i;
+      state.voicingIndex = 0;
+      state.position = 0;
+      document.querySelectorAll('.note-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateUI();
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function buildTypeList() {
+  const list = $('typeList');
+  list.innerHTML = '';
+  CHORD_TYPES.forEach(type => {
+    const btn = document.createElement('button');
+    btn.className = 'type-btn' + (type.id === state.typeId ? ' active' : '');
+    btn.dataset.id = type.id;
+    btn.innerHTML = `<span>${type.name}</span><span class="type-symbol">${type.symbol || 'M'}</span>`;
+    btn.addEventListener('click', () => {
+      state.typeId = type.id;
+      state.voicingIndex = 0;
+      state.position = 0;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateUI();
+    });
+    list.appendChild(btn);
+  });
+}
+
+function buildTuningPanel() {
+  const opts = $('tuningOptions');
+  opts.innerHTML = '';
+  for (const [id, t] of Object.entries(TUNINGS)) {
+    const btn = document.createElement('div');
+    btn.className = 'tuning-option' + (id === state.tuning ? ' active' : '');
+    btn.dataset.id = id;
+    btn.innerHTML = `<span class="tuning-name">${t.name}</span><span class="tuning-notes">${t.notes.join(' ')}</span>`;
+    btn.addEventListener('click', () => {
+      state.tuning = id;
+      document.querySelectorAll('.tuning-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateUI();
+      closeTuning();
+    });
+    opts.appendChild(btn);
+  }
+}
+
+// ── Tuning panel ──────────────────────────────────────────────────────────────
+function openTuning() {
+  $('tuningPanel').classList.add('show');
+  $('overlay').classList.add('show');
+}
+function closeTuning() {
+  $('tuningPanel').classList.remove('show');
+  $('overlay').classList.remove('show');
+}
+
+// ── Main update ───────────────────────────────────────────────────────────────
+function updateUI() {
+  const note = NOTES[state.rootIndex];
+  const type = CHORD_TYPES.find(t => t.id === state.typeId);
+  const voicings = CHORD_VOICINGS[state.rootIndex][state.typeId] || [];
+
+  // Header
+  $('chordName').textContent = note + (type.symbol || '');
+  $('chordFullName').textContent = note + ' ' + type.name;
+  $('chordSymbol').textContent = type.symbol || 'M';
+  $('chordFormula').textContent = type.formula;
+
+  // Compute actual chord notes
+  const tuning = TUNINGS[state.tuning];
+  const chordNoteNames = getChordNoteNames(state.rootIndex, type.intervals);
+  $('chordNotes').textContent = chordNoteNames.join(' ');
+
+  // Voicing selector
+  buildVoicingSelector(voicings);
+
+  // Position dots (alternate voicings)
+  buildPositionDots(voicings);
+
+  // Main fretboard
+  const voicing = voicings[state.voicingIndex] || voicings[0];
+  if (voicing) {
+    drawFretboard(voicing, tuning);
+  }
+
+  // Diagram grid
+  buildDiagramGrid(voicings, tuning);
+
+  // Notes pills
+  buildNotesPills(chordNoteNames, note);
+}
+
+function getChordNoteNames(rootIdx, intervals) {
+  return intervals.map(i => {
+    const idx = (rootIdx + i) % 12;
+    return NOTES[idx];
+  });
+}
+
+// ── Voicing selector ──────────────────────────────────────────────────────────
+function buildVoicingSelector(voicings) {
+  const sel = $('voicingSelector');
+  sel.innerHTML = '';
+  voicings.slice(0, 6).forEach((v, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'voicing-btn' + (i === state.voicingIndex ? ' active' : '');
+    const minFret = Math.min(...v.frets.filter(f => f > 0));
+    btn.textContent = `Voicing ${i+1}  (pos. ${minFret})`;
+    btn.addEventListener('click', () => {
+      state.voicingIndex = i;
+      state.position = i;
+      updateUI();
+    });
+    sel.appendChild(btn);
+  });
+}
+
+function buildPositionDots(voicings) {
+  const dots = $('positionDots');
+  dots.innerHTML = '';
+  voicings.slice(0,9).forEach((v, i) => {
+    const d = document.createElement('div');
+    d.className = 'pos-dot' + (i === state.voicingIndex ? ' active' : '');
+    d.textContent = i+1;
+    d.addEventListener('click', () => {
+      state.voicingIndex = i;
+      state.position = i;
+      updateUI();
+    });
+    dots.appendChild(d);
+  });
+}
+
+// ── Fretboard canvas ──────────────────────────────────────────────────────────
+function drawFretboard(voicing, tuning) {
+  const canvas = $('fretboard');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const STRINGS = 6;
+  const FRETS_SHOWN = 16;
+  const padLeft = 72;
+  const padRight = 20;
+  const padTop = 28;
+  const padBottom = 20;
+  const fretW = (W - padLeft - padRight) / FRETS_SHOWN;
+  const stringH = (H - padTop - padBottom) / (STRINGS - 1);
+
+  // Find the display window
+  const activeFrets = voicing.frets.filter(f => f > 0);
+  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 0;
+  const startFret = minFret > 1 ? minFret - 1 : 0;
+
+  // Background
+  ctx.fillStyle = '#1a1410';
+  ctx.fillRect(0, 0, W, H);
+
+  // Fret numbers
+  ctx.fillStyle = '#555';
+  ctx.font = '11px DM Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let f = 0; f <= FRETS_SHOWN; f++) {
+    const x = padLeft + f * fretW;
+    ctx.fillText(startFret + f, x, 16);
+  }
+
+  // String labels
+  const stringNames = tuning.notes.slice().reverse();
+  ctx.font = '11px DM Mono, monospace';
+  ctx.textAlign = 'right';
+  [0,1,2,3,4,5].forEach(s => {
+    const y = padTop + s * stringH;
+    ctx.fillStyle = '#888';
+    ctx.fillText(stringNames[s].replace(/\d/,''), padLeft - 28, y + 4);
+  });
+
+  // Fret markers on fretboard
+  const markerFrets = [3,5,7,9,12,15];
+  markerFrets.forEach(mf => {
+    const relF = mf - startFret;
+    if (relF >= 0 && relF <= FRETS_SHOWN) {
+      const x = padLeft + (relF - 0.5) * fretW;
+      ctx.fillStyle = '#2a2010';
+      if (mf === 12) {
+        ctx.beginPath();
+        ctx.arc(x, padTop + stringH * 1.5, 5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, padTop + stringH * 3.5, 5, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, padTop + stringH * 2.5, 5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  });
+
+  // Nut
+  if (startFret === 0) {
+    ctx.fillStyle = '#c8b870';
+    ctx.fillRect(padLeft - 4, padTop - 4, 6, (STRINGS-1)*stringH + 8);
+  }
+
+  // Fret lines
+  for (let f = 0; f <= FRETS_SHOWN; f++) {
+    const x = padLeft + f * fretW;
+    ctx.strokeStyle = f === 0 ? '#3a3020' : '#2e2010';
+    ctx.lineWidth = f === 0 ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x, padTop - 4);
+    ctx.lineTo(x, padTop + (STRINGS-1)*stringH + 4);
+    ctx.stroke();
+  }
+
+  // String thicknesses (high E=thin, low E=thick)
+  const stringWidths = [2.2, 1.8, 1.4, 1.1, 0.9, 0.7];
+  const stringColors = ['#d8c878','#c8b868','#b8a858','#a89848','#988838','#888828'];
+
+  // Draw strings
+  for (let s = 0; s < STRINGS; s++) {
+    const y = padTop + s * stringH;
+    ctx.strokeStyle = stringColors[s];
+    ctx.lineWidth = stringWidths[s];
+    ctx.beginPath();
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(padLeft + FRETS_SHOWN * fretW, y);
+    ctx.stroke();
+  }
+
+  // Barre indicator
+  if (voicing.barre) {
+    const bf = voicing.barre.fret - startFret;
+    if (bf >= 0 && bf <= FRETS_SHOWN) {
+      const x = padLeft + (bf - 0.5) * fretW;
+      const y1 = padTop + voicing.barre.from * stringH;
+      const y2 = padTop + voicing.barre.to * stringH;
+      ctx.strokeStyle = 'rgba(232,160,32,0.5)';
+      ctx.lineWidth = 16;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y2);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+    }
+  }
+
+  // Finger dots
+  // voicing.frets order: [string6(low-E), string5, string4, string3, string2, string1(high-E)]
+  const displayOrder = [5,4,3,2,1,0]; // canvas top=high-E(string1), bottom=low-E(string6)
+  voicing.frets.forEach((fret, strIdx) => {
+    // strIdx 0 = low E (bottom), strIdx 5 = high E (top)
+    const canvasRow = 5 - strIdx; // flip: strIdx 0 → row 5 (bottom)
+    const y = padTop + canvasRow * stringH;
+    const x_str = padLeft - 16;
+
+    if (fret === -1) {
+      // Muted
+      ctx.fillStyle = '#cc4444';
+      ctx.font = 'bold 13px DM Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText('✕', padLeft - 16, y + 4);
+    } else if (fret === 0) {
+      // Open
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(padLeft - 16, y, 6, 0, Math.PI*2);
+      ctx.stroke();
+    } else {
+      // Fretted note
+      const relF = fret - startFret;
+      if (relF >= 0 && relF <= FRETS_SHOWN) {
+        const x = padLeft + (relF - 0.5) * fretW;
+        const finger = voicing.fingers ? voicing.fingers[strIdx] : 0;
+        const isRoot = (fret > 0) && isRootNote(strIdx, fret, tuning);
+
+        // Glow
+        ctx.shadowBlur = isRoot ? 12 : 6;
+        ctx.shadowColor = isRoot ? '#e8a020' : 'rgba(232,160,32,0.4)';
+
+        ctx.fillStyle = isRoot ? '#e8a020' : '#e0d0a0';
+        ctx.beginPath();
+        ctx.arc(x, y, 11, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        if (finger > 0) {
+          ctx.fillStyle = isRoot ? '#000' : '#1a1410';
+          ctx.font = 'bold 11px DM Sans';
+          ctx.textAlign = 'center';
+          ctx.fillText(finger, x, y + 4);
+        }
+      }
+    }
+  });
+}
+
+function isRootNote(strIdx, fret, tuning) {
+  const pitch = tuning.pitches[strIdx] + fret;
+  return (pitch % 12) === (state.rootIndex % 12);
+}
+
+// ── Mini diagram canvas ───────────────────────────────────────────────────────
+function drawMiniDiagram(canvas, voicing, isActive) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const STRINGS = 6;
+  const FRETS = 5;
+  const padL = 14, padR = 8, padT = 20, padB = 10;
+  const fw = (W - padL - padR) / FRETS;
+  const sh = (H - padT - padB) / (STRINGS-1);
+
+  const activeFrets = voicing.frets.filter(f => f > 0);
+  const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 0;
+  const startFret = minFret > 1 ? minFret - 1 : 0;
+
+  // bg
+  ctx.fillStyle = '#161410';
+  ctx.fillRect(0,0,W,H);
+
+  // Position marker
+  if (startFret > 0) {
+    ctx.fillStyle = '#666';
+    ctx.font = '8px DM Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(startFret+'fr', 2, 12);
+  }
+
+  // Nut
+  if (startFret === 0) {
+    ctx.fillStyle = '#c8b870';
+    ctx.fillRect(padL-2, padT-2, 3, (STRINGS-1)*sh + 4);
+  }
+
+  // Fret lines
+  for (let f = 0; f <= FRETS; f++) {
+    const x = padL + f * fw;
+    ctx.strokeStyle = '#2e2010';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, padT);
+    ctx.lineTo(x, padT + (STRINGS-1)*sh);
+    ctx.stroke();
+  }
+
+  // Strings
+  const strW = [1.8,1.4,1.1,0.9,0.7,0.6];
+  for (let s = 0; s < STRINGS; s++) {
+    const y = padT + s * sh;
+    ctx.strokeStyle = '#887828';
+    ctx.lineWidth = strW[s];
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + FRETS * fw, y);
+    ctx.stroke();
+  }
+
+  // Dots
+  voicing.frets.forEach((fret, strIdx) => {
+    const row = 5 - strIdx;
+    const y = padT + row * sh;
+    if (fret === -1) {
+      ctx.fillStyle = '#cc4444';
+      ctx.font = '7px DM Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText('✕', padL - 7, y + 3);
+    } else if (fret === 0) {
+      ctx.strokeStyle = '#bbb';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(padL - 7, y, 3, 0, Math.PI*2);
+      ctx.stroke();
+    } else {
+      const relF = fret - startFret;
+      if (relF >= 0 && relF <= FRETS) {
+        const x = padL + (relF - 0.5) * fw;
+        const isRoot = (TUNINGS[state.tuning].pitches[strIdx] + fret) % 12 === state.rootIndex % 12;
+        ctx.fillStyle = isRoot ? '#e8a020' : '#c0b080';
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  });
+}
+
+// ── Diagram grid ──────────────────────────────────────────────────────────────
+function buildDiagramGrid(voicings, tuning) {
+  const grid = $('diagramGrid');
+  grid.innerHTML = '';
+
+  const display = voicings.slice(0, 9);
+  display.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.className = 'chord-diagram' + (i === state.voicingIndex ? ' active' : '');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'diagram-canvas-wrap';
+    const cvs = document.createElement('canvas');
+    cvs.width = 104; cvs.height = 90;
+    cvs.style.width = '100%';
+    wrap.appendChild(cvs);
+    card.appendChild(wrap);
+
+    const label = document.createElement('div');
+    label.className = 'diagram-label';
+    const minF = Math.min(...v.frets.filter(f=>f>0));
+    label.textContent = `pos. ${minF}`;
+    card.appendChild(label);
+
+    card.addEventListener('click', () => {
+      state.voicingIndex = i;
+      state.position = i;
+      updateUI();
+    });
+    grid.appendChild(card);
+
+    // Draw after append
+    requestAnimationFrame(() => drawMiniDiagram(cvs, v, i === state.voicingIndex));
+  });
+}
+
+// ── Notes pills ───────────────────────────────────────────────────────────────
+function buildNotesPills(noteNames, root) {
+  const ref = $('notesReference');
+  ref.innerHTML = '';
+  noteNames.forEach(n => {
+    const pill = document.createElement('span');
+    pill.className = 'note-pill' + (n === root ? ' root' : '');
+    pill.textContent = n;
+    ref.appendChild(pill);
+  });
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function noteFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function playChord() {
+  const voicings = CHORD_VOICINGS[state.rootIndex][state.typeId] || [];
+  const voicing = voicings[state.voicingIndex] || voicings[0];
+  if (!voicing) return;
+
+  const actx = getAudioCtx();
+  const tuning = TUNINGS[state.tuning];
+  const now = actx.currentTime;
+
+  voicing.frets.forEach((fret, strIdx) => {
+    if (fret < 0) return;
+    const midi = tuning.pitches[strIdx] + fret;
+    const freq = noteFreq(midi);
+    const delay = strIdx * 0.045; // strum effect
+
+    const osc = actx.createOscillator();
+    const gainNode = actx.createGain();
+    const filter = actx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, now + delay);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2400, now + delay);
+    filter.Q.setValueAtTime(2, now + delay);
+
+    gainNode.gain.setValueAtTime(0, now + delay);
+    gainNode.gain.linearRampToValueAtTime(0.18, now + delay + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + delay + 2.2);
+
+    osc.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(actx.destination);
+
+    osc.start(now + delay);
+    osc.stop(now + delay + 2.5);
+  });
+
+  // Flash play button
+  const btn = $('playBtn');
+  btn.style.transform = 'scale(0.9)';
+  setTimeout(() => btn.style.transform = '', 150);
+}
+</script>
+
+</body>
+</html>
