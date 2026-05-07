@@ -5,6 +5,7 @@ const state = {
   voicingIndex: 0,
   tuning: 'standard',
   position: 0,
+  showAllPositions: false,
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -25,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
   $('toggleTuning').addEventListener('click', openTuning);
   $('closeTuning').addEventListener('click', closeTuning);
   $('overlay').addEventListener('click', closeTuning);
+  $('showAllBtn').addEventListener('click', () => {
+    state.showAllPositions = !state.showAllPositions;
+    $('showAllBtn').classList.toggle('active', state.showAllPositions);
+    updateUI();
+  });
 
   // keyboard shortcut
   document.addEventListener('keydown', e => {
@@ -179,7 +185,8 @@ function buildVoicingSelector(voicings) {
 function buildPositionDots(voicings) {
   const dots = $('positionDots');
   dots.innerHTML = '';
-  voicings.slice(0,9).forEach((v, i) => {
+  const list = state.showAllPositions ? voicings : voicings.slice(0, 9);
+  list.forEach((v, i) => {
     const d = document.createElement('div');
     d.className = 'pos-dot' + (i === state.voicingIndex ? ' active' : '');
     d.textContent = i+1;
@@ -456,7 +463,7 @@ function buildDiagramGrid(voicings, tuning) {
   const grid = $('diagramGrid');
   grid.innerHTML = '';
 
-  const display = voicings.slice(0, 9);
+  const display = state.showAllPositions ? voicings : voicings.slice(0, 9);
   display.forEach((v, i) => {
     const card = document.createElement('div');
     card.className = 'chord-diagram' + (i === state.voicingIndex ? ' active' : '');
